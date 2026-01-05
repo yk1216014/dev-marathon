@@ -9,10 +9,10 @@ app.use(cors());
 
 const { Pool } = require("pg");
 const pool = new Pool({
-  user: "postgres", // PostgreSQLのユーザー名に置き換えてください
-  host: "db",
-  database: "postgres", // PostgreSQLのデータベース名に置き換えてください
-  password: "postgres", // PostgreSQLのパスワードに置き換えてください
+  user: "5465", // PostgreSQLのユーザー名に置き換えてください
+  host: "postgres", // Docker Composeのサービス名に置き換えてください
+  database: "5465", // PostgreSQLのデータベース名に置き換えてください
+  password: "5465", // PostgreSQLのパスワードに置き換えてください
   port: 5432,
 });
 
@@ -37,7 +37,7 @@ app.post("/add-customer", async (req, res) => {
   try {
     const { companyName, industry, contact, location } = req.body;
     const newCustomer = await pool.query(
-      "INSERT INTO customers (company_nam, industry, contact, location) VALUES ($1, $2, $3, $4) RETURNING *",
+      "INSERT INTO customers (company_name, industry, contact, location) VALUES ($1, $2, $3, $4) RETURNING *",
       [companyName, industry, contact, location]
     );
     res.json({ success: true, customer: newCustomer.rows[0] });
