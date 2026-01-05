@@ -14,7 +14,7 @@ services:
     container_name: nodejs
     image: node:22-bullseye
     ports:
-      - "1985:1985"
+      - "5465:5465"
     volumes:
       - ./src/node:/app
       - ./work:/work
@@ -32,7 +32,7 @@ services:
       timeout: 5s
       retries: 3
     volumes:
-      - ./db:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql/data
       - ./work:/work
     working_dir: /work
     environment:
@@ -58,3 +58,6 @@ services:
       - db
     env_file:
       - .env
+      
+volumes:
+  db-data:
