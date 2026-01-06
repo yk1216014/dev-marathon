@@ -1,63 +1,87 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>顧客情報入力</title>
-    <!-- Bootstrap CSSの読み込み -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <title>案件情報入力 - Marathon CRM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .input-card {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+        }
+    </style>
 </head>
+
 <body>
     <div class="container mt-5">
-        <h2 class="mb-4">顧客情報を入力してください</h2>
-        <form id="customer-form">
-            <div class="form-group">
-                <label for="companyName">会社名:</label>
-                <input type="text" class="form-control" id="companyName" name="companyName" required>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold">案件情報の登録</h2>
+                    <p class="text-muted">新しいプロジェクトの情報を入力してください</p>
+                </div>
+
+                <div class="card input-card p-4">
+                    <form id="project-form">
+                        <div class="mb-3">
+                            <label for="companyName" class="form-label">会社名</label>
+                            <input type="text" class="form-control form-control-lg" id="companyName" name="companyName"
+                                placeholder="株式会社〇〇" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="industry" class="form-label">業種</label>
+                            <input type="text" class="form-control" id="industry" name="industry" placeholder="IT・製造など"
+                                required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contact" class="form-label">連絡先</label>
+                            <input type="text" class="form-control" id="contact" name="contact"
+                                placeholder="example@mail.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="location" class="form-label">所在地</label>
+                            <input type="text" class="form-control" id="location" name="location"
+                                placeholder="東京都渋谷区..." required>
+                        </div>
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold"
+                                style="background-color: #5465ff;">
+                                入力内容を確認する
+                            </button>
+                            <a href="/" class="btn btn-link text-muted text-decoration-none">キャンセル</a>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="industry">業種:</label>
-                <input type="text" class="form-control" id="industry" name="industry" required>
-            </div>
-            <div class="form-group">
-                <label for="contact">連絡先:</label>
-                <input type="text" class="form-control" id="contact" name="contact" required>
-            </div>
-            <div class="form-group">
-                <label for="location">所在地:</label>
-                <input type="text" class="form-control" id="location" name="location" required>
-            </div>
-            <button type="submit" class="btn btn-primary">送信</button>
-        </form>
+        </div>
     </div>
+
     <script type="module">
         import config from '../config.js';
 
-        document.getElementById('customer-form').addEventListener('submit', function(e) {
+        document.getElementById('project-form').addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
-            fetch(config.apiUrl + '/add-customer', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams([...formData])
-            }).then(response => response.json())
-              .then(data => {
-                if(data.success) {
-                    alert('顧客情報が正常に保存されました。');
-                    // フォームをリセット
-                    document.getElementById('customer-form').reset();
-                } else {
-                    alert('保存に失敗しました。');
-                }
-              })
-              .catch(error => console.error('Error:', error));
+            const params = new URLSearchParams([...formData]);
+
+            // 確認画面(add-confirm.html)へ遷移
+            window.location.href = './add-confirm.html?' + params.toString();
         });
     </script>
-    <!-- BootstrapのJavaScriptの読み込み -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

@@ -1,57 +1,134 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Customer List</title>
-    <!-- Bootstrap CSSの読み込み -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-  </head>
-  <body>
-    <div class="container mt-5">
-      <h1 class="mb-4">Customer List</h1>
-      <table class="table table-striped">
-        <thead class="thead-dark">
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Company Name</th>
-            <th scope="col">Contact</th>
-          </tr>
-        </thead>
-        <tbody id="customer-list">
-          <!-- 顧客データはここに挿入されます -->
-        </tbody>
-      </table>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>顧客一覧 - Marathon CRM</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .page-header {
+      background: white;
+      padding: 2rem 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+      margin-bottom: 2rem;
+    }
+
+    .card-list {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+      transition: transform 0.2s;
+    }
+
+    .card-list:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .badge-industry {
+      background-color: #e3f2fd;
+      color: #0d47a1;
+      font-weight: 500;
+    }
+
+    .table-custom th {
+      font-weight: 600;
+      color: #6c757d;
+      border-top: none;
+    }
+
+    .table-custom td {
+      vertical-align: middle;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-header">
+    <div class="container d-flex justify-content-between align-items-center">
+      <h2 class="fw-bold m-0 text-dark">顧客一覧</h2>
+      <a href="add.html" class="btn btn-primary fw-bold px-4" style="background-color: #5465ff;">
+        + 新規登録
+      </a>
     </div>
+  </div>
 
-    <script type="module">
-      // ExpressサーバのAPIエンドポイントのURL
-      import config from "./config.js";
+  <div class="container">
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+      <div class="card-body p-0">
+        <table class="table table-hover table-custom mb-0">
+          <thead class="bg-light">
+            <tr>
+              <th scope="col" class="py-3 px-4">#</th>
+              <th scope="col" class="py-3 px-4">会社名</th>
+              <th scope="col" class="py-3 px-4">業種</th>
+              <th scope="col" class="py-3 px-4">連絡先</th>
+              <th scope="col" class="py-3 px-4">所在地</th>
+            </tr>
+          </thead>
+          <tbody id="customer-list">
+            <!-- データ読み込み中... -->
+            <tr>
+              <td colspan="5" class="text-center py-5 text-muted">読み込み中...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-      fetch(`${config.apiUrl}/customers`)
-        .then((response) => {
-          console.log(response); // ここでレスポンスオブジェクトをログに出力
-          return response.json();
-        })
-        .then((data) => {
-          console.log(data); // ここで解析されたデータをログに出力
-          const list = document.getElementById("customer-list");
-          data.forEach((customer, index) => {
-            const row = list.insertRow();
-            const cell1 = row.insertCell(0);
-            const cell2 = row.insertCell(1);
-            const cell3 = row.insertCell(2);
-            cell1.textContent = index + 1;
-            cell2.textContent = customer.companyname;
-            cell3.textContent = customer.contact;
-          });
-        })
-        .catch((error) => console.error(error));
-    </script>
+  <script type="module">
+    import config from '../config.js';
 
-    <!-- BootstrapのJavaScriptと依存関係のリンク -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-  </body>
+    fetch(`${config.apiUrl}/customers`)
+      .then(response => response.json())
+      .then(data => {
+        const list = document.getElementById("customer-list");
+        list.innerHTML = ''; // ローディング表示をクリア
+
+        if (data.length === 0) {
+          list.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">データがありません</td></tr>';
+          return;
+        }
+
+        data.forEach((customer, index) => {
+          const row = document.createElement('tr');
+
+          // DBのカラム名が snake_case なので注意
+          const companyName = customer.company_name || customer.companyname || '-';
+          const industry = customer.industry || '-';
+          const contact = customer.contact || '-';
+          const location = customer.location || '-';
+
+          row.innerHTML = `
+                        <th scope="row" class="px-4 text-muted">${index + 1}</th>
+                        <td class="px-4 fw-bold text-dark">
+                            <a href="detail.html?id=${customer.customer_id}" class="text-decoration-none text-dark region-link">
+                                ${companyName}
+                            </a>
+                        </td>
+                        <td class="px-4"><span class="badge badge-industry px-2 py-1 rounded-pill small">${industry}</span></td>
+                        <td class="px-4 text-secondary">${contact}</td>
+                        <td class="px-4 text-secondary">${location}</td>
+                    `;
+          list.appendChild(row);
+        });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        document.getElementById("customer-list").innerHTML =
+          '<tr><td colspan="5" class="text-center py-5 text-danger">データの取得に失敗しました<br><small>' + error.message + '</small></td></tr>';
+      });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
 </html>

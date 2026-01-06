@@ -1,3 +1,75 @@
-<h1>横山さんのWebテスト画面</h1>
-<p>DockerでWebサーバーが動いています！</p>
-<p>この画面は、src/web/index.html ファイルから提供されています。</p>
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marathon CRM - Home</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .hero-section {
+            background: #5465ff;
+            color: white;
+            padding: 60px 0;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            transition: transform 0.2s;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Marathon CRM</h1>
+            <p class="lead">顧客管理システムへようこそ</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-4">
+                <div class="card h-100 text-center p-4" onclick="location.href='/customers'">
+                    <div class="card-body">
+                        <div class="display-5 mb-3">👥</div>
+                        <h5 class="card-title fw-bold">顧客一覧</h5>
+                        <p class="card-text text-muted">登録されている顧客情報を確認・管理します。</p>
+                        <a href="/customers" class="btn btn-primary px-4">一覧を表示</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 text-center p-4" onclick="location.href='/customer/add.html'">
+                    <div class="card-body">
+                        <div class="display-5 mb-3">➕</div>
+                        <h5 class="card-title fw-bold">新規登録</h5>
+                        <p class="card-text text-muted">新しい顧客情報をシステムに追加します。</p>
+                        <a href="/customer/add.html" class="btn btn-primary px-4">登録へ進む</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center mt-5 py-4 text-muted">
+        <small>&copy; 2026 Dev-Marathon Training</small>
+    </footer>
+
+</body>
+
+</html>

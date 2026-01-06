@@ -1,22 +1,148 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>案件情報入力</title>
-    <!-- Bootstrap CSSの読み込み -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <title>登録内容の確認 - Marathon CRM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .confirm-card {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .label-text {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .value-text {
+            font-size: 1.1rem;
+            color: #212529;
+            font-weight: 500;
+        }
+
+        .confirm-row {
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        .confirm-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+    </style>
 </head>
+
 <body>
     <div class="container mt-5">
-        <!-- ここにHTMLを書く -->
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold">登録内容の確認</h2>
+                    <p class="text-muted">以下の内容で登録します。よろしいですか？</p>
+                </div>
+
+                <div class="card confirm-card p-4">
+                    <div id="confirm-content">
+                        <!-- ここに確認内容がJSで挿入されます -->
+                        <div class="confirm-row">
+                            <div class="label-text">会社名</div>
+                            <div class="value-text" id="display-companyName"></div>
+                        </div>
+                        <div class="confirm-row">
+                            <div class="label-text">業種</div>
+                            <div class="value-text" id="display-industry"></div>
+                        </div>
+                        <div class="confirm-row">
+                            <div class="label-text">連絡先</div>
+                            <div class="value-text" id="display-contact"></div>
+                        </div>
+                        <div class="confirm-row">
+                            <div class="label-text">所在地</div>
+                            <div class="value-text" id="display-location"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button id="btn-submit" class="btn btn-primary btn-lg fw-bold"
+                            style="background-color: #5465ff;">
+                            この内容で登録する
+                        </button>
+                        <button id="btn-back" class="btn btn-outline-secondary">
+                            修正する
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
     <script type="module">
-        <!-- ここにJSを書く -->
+        import config from '../config.js';
+
+        // URLパラメータを取得
+        const params = new URLSearchParams(window.location.search);
+
+        // 画面表示用マッピング
+        const fields = ['companyName', 'industry', 'contact', 'location'];
+
+        // パラメータを画面に表示
+        fields.forEach(field => {
+            const value = params.get(field) || '';
+            const displayEl = document.getElementById(`display-${field}`);
+            if (displayEl) {
+                // XSS対策としてtextContentを使用
+                displayEl.textContent = value;
+            }
+        });
+
+        // 戻るボタン
+        document.getElementById('btn-back').addEventListener('click', () => {
+            window.history.back();
+        });
+
+        // 登録ボタン
+        document.getElementById('btn-submit').addEventListener('click', () => {
+            // 送信ボタンを無効化（二重送信防止）
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = true;
+            btn.textContent = '登録中...';
+
+            fetch(config.apiUrl + '/add-customer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: params // URLSearchParamsをそのままBodyに使える
+            }).then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('登録が完了しました！');
+                        window.location.href = './list.html'; // リスト画面等へ戻すのが一般的
+                    } else {
+                        alert('登録に失敗しました。\n' + (data.error || '詳細不明なエラー'));
+                        btn.disabled = false;
+                        btn.textContent = 'この内容で登録する';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('通信エラーまたはシステムエラーが発生しました。\n詳細: ' + error.message);
+                    btn.disabled = false;
+                    btn.textContent = 'この内容で登録する';
+                });
+        });
     </script>
-    <!-- BootstrapのJavaScriptの読み込み -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
+
 </html>

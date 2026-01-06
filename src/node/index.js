@@ -1,3 +1,4 @@
+const path = require("path");
 const express = require("express");
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -9,10 +10,10 @@ app.use(cors());
 
 const { Pool } = require("pg");
 const pool = new Pool({
-  user: "5465", // PostgreSQLのユーザー名に置き換えてください
-  host: "postgres", // Docker Composeのサービス名に置き換えてください
-  database: "5465", // PostgreSQLのデータベース名に置き換えてください
-  password: "5465", // PostgreSQLのパスワードに置き換えてください
+  user: "5465",
+  host: process.env.DB_HOST || "localhost",
+  database: "5465",
+  password: "5465",
   port: 5432,
 });
 
@@ -26,7 +27,7 @@ app.get("/customers", async (req, res) => {
     res.send(customerData.rows);
   } catch (err) {
     console.error(err);
-    res.send("Error " + err);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -43,8 +44,51 @@ app.post("/add-customer", async (req, res) => {
     res.json({ success: true, customer: newCustomer.rows[0] });
   } catch (err) {
     console.error(err);
-    res.json({ success: false });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-app.use(express.static("public"));
+app.get("/customers/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const customer = await pool.query("SELECT * FROM customers WHERE customer_id = $1", [id]);
+    if (customer.rows.length === 0) {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+    res.json(customer.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/update-customer", async (req, res) => {
+  try {
+    const { id, companyName, industry, contact, location } = req.body;
+    const updatedCustomer = await pool.query(
+      "UPDATE customers SET company_name = $1, industry = $2, contact = $3, location = $4 WHERE customer_id = $5 RETURNING *",
+      [companyName, industry, contact, location, id]
+    );
+    res.json({ success: true, customer: updatedCustomer.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete("/customers/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query("DELETE FROM customers WHERE customer_id = $1", [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.use(express.static(path.join(__dirname, "../web")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../web/index.html"));
+});
