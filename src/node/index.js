@@ -9,11 +9,32 @@ const cors = require("cors");
 app.use(cors());
 
 const { Pool } = require("pg");
+const dbHost = process.env.DB_HOST || "localhost";
+
+// Docker environment (Local) uses 'db' hostname and '5465' credentials
+// Staging environment uses 'localhost' and specific user credentials
+let dbUser = process.env.DB_USER;
+let dbName = process.env.DB_NAME;
+let dbPass = process.env.DB_PASSWORD;
+
+if (!dbUser) {
+  if (dbHost === 'db') {
+    dbUser = "5465";
+    dbName = "5465";
+    dbPass = "5465";
+  } else {
+    // Fallback for Staging (localhost)
+    dbUser = "user_kento_yokoyama";
+    dbName = "db_kento_yokoyama";
+    dbPass = "5Rw5YDaWc5jc";
+  }
+}
+
 const pool = new Pool({
-  user: "5465",
-  host: process.env.DB_HOST || "localhost",
-  database: "5465",
-  password: "5465",
+  user: dbUser,
+  host: dbHost,
+  database: dbName,
+  password: dbPass,
   port: 5432,
 });
 
@@ -21,7 +42,12 @@ app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
 
-app.get("/customers", async (req, res) => {
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+const apiRouter = express.Router();
+
+apiRouter.get("/customers", async (req, res) => {
   try {
     const customerData = await pool.query("SELECT * FROM customers");
     res.send(customerData.rows);
@@ -31,10 +57,7 @@ app.get("/customers", async (req, res) => {
   }
 });
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-
-app.post("/add-customer", async (req, res) => {
+apiRouter.post("/add-customer", async (req, res) => {
   try {
     const { companyName, industry, contact, location } = req.body;
     const newCustomer = await pool.query(
@@ -48,7 +71,7 @@ app.post("/add-customer", async (req, res) => {
   }
 });
 
-app.get("/customers/:id", async (req, res) => {
+apiRouter.get("/customers/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const customer = await pool.query("SELECT * FROM customers WHERE customer_id = $1", [id]);
@@ -62,7 +85,7 @@ app.get("/customers/:id", async (req, res) => {
   }
 });
 
-app.post("/update-customer", async (req, res) => {
+apiRouter.post("/update-customer", async (req, res) => {
   try {
     const { id, companyName, industry, contact, location } = req.body;
     const updatedCustomer = await pool.query(
@@ -76,7 +99,7 @@ app.post("/update-customer", async (req, res) => {
   }
 });
 
-app.delete("/customers/:id", async (req, res) => {
+apiRouter.delete("/customers/:id", async (req, res) => {
   try {
     const { id } = req.params;
     await pool.query("DELETE FROM customers WHERE customer_id = $1", [id]);
@@ -87,8 +110,12 @@ app.delete("/customers/:id", async (req, res) => {
   }
 });
 
-app.use(express.static(path.join(__dirname, "../web")));
+// Mount the API router on root (for localhost) and /api_* (for staging with prefix)
+app.use("/", apiRouter);
+app.use(/\/api_[^\/]+/, apiRouter);
+
+app.use(express.static(path.join(__dirname, "web")));
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../web/index.html"));
+  res.sendFile(path.join(__dirname, "web/index.html"));
 });
