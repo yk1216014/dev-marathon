@@ -114,8 +114,8 @@ apiRouter.delete("/customers/:id", async (req, res) => {
 app.use("/", apiRouter);
 app.use(/\/api_[^\/]+/, apiRouter);
 
-app.use(express.static(path.join(__dirname, "web")));
+app.use(express.static(path.join(__dirname, "../web")));
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "web/index.html"));
+  res.sendFile(path.join(__dirname, "../web/index.html"));
 });
