@@ -9,15 +9,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - id: ssh
-        # 1. ツールを同期と同じものに変える
-        uses: invi5H/ssh-action@v1
+      - name: Execute remote deploy script
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          SSH_HOST: ${{ secrets.DEV_SSH_HOST }}
-          SSH_PORT: ${{ secrets.DEV_SSH_PORT }}
-          SSH_USER: ${{ secrets.DEV_SSH_USER }}
-          # 2. 鍵の名前を、以前確認した「SSH_PRIVATE_KEY」に合わせる
-          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      # 3. 実行部分を同期と同じ書き方に分ける
-      - run: ssh ${{ steps.ssh.outputs.SERVER }} bash /app/kento_yokoyama/deploy.sh kento_yokoyama
+          host: ${{ secrets.DEV_SSH_HOST }}
+          username: ${{ secrets.DEV_SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.DEV_SSH_PORT }}
+          # 改行コードの修正と権限付与を行ってから実行します
+          script: |
+            sed -i 's/\r//' /app/kento_yokoyama/deploy.sh
+            chmod +x /app/kento_yokoyama/deploy.sh
+            bash /app/kento_yokoyama/deploy.sh kento_yokoyama
