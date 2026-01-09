@@ -1,0 +1,27 @@
+name: ssh command
+
+# 1. 【いつ】実行するか：developブランチにpushされたとき
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  # 2. 【どこで】実行するか：最新のUbuntu仮想マシン
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 3. 【何を】するか：指定されたSSHアクションを使ってサーバーに接続
+      - id: ssh
+        uses: invi5H/ssh-action@v1
+        with:
+          SSH_HOST: ${{ secrets.DEV_SSH_HOST }}
+          SSH_PORT: ${{ secrets.DEV_SSH_PORT }}
+          SSH_USER: ${{ secrets.DEV_SSH_USER }}
+          SSH_KEY: ${{ secrets.DEV_SSHE_SSH_KEY }}
+
+      # 4. 【コマンド実行】：サーバー上のdeploy.shを動かす
+      # 自分のユーザー名（kento_yokoyama）を引数として渡します
+      - name: Execute remote deploy script
+        run: ssh ${{ steps.ssh.outputs.SERVER }} bash /app/kento_yokoyama/deploy.sh kento_yokoyama
