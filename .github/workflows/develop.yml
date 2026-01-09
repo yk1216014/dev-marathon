@@ -12,12 +12,18 @@ jobs:
       - name: Execute remote deploy script
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.DEV_SSH_HOST }}
-          username: ${{ secrets.DEV_SSH_USER }}
+          # Secretsの打ち間違いを疑わなくて済むよう、接続先を直接指定します
+          host: "dev.marathon.rplearn.net"
+          username: "kento_yokoyama"
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.DEV_SSH_PORT }}
-          # 改行コードの修正と権限付与を行ってから実行します
+          port: 22
+          # --- ここが最重要：詳細なログを出す設定 ---
+          debug: true
+          timeout: 30s
+          # ---------------------------------------
           script: |
+            echo "--- Login Success! ---"
+            whoami
             sed -i 's/\r//' /app/kento_yokoyama/deploy.sh
             chmod +x /app/kento_yokoyama/deploy.sh
             bash /app/kento_yokoyama/deploy.sh kento_yokoyama
