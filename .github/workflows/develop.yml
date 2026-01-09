@@ -15,5 +15,4 @@ jobs:
           username: ${{ secrets.DEV_SSH_USER }}
           key: ${{ secrets.DEV_SSHE_SSH_KEY }}
           port: ${{ secrets.DEV_SSH_PORT }}
-          # ここに実行したいコマンドを直接書きます
           script: bash /app/kento_yokoyama/deploy.sh kento_yokoyama
