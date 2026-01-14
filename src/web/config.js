@@ -1,7 +1,8 @@
 const getApiUrl = () => {
   const hostname = window.location.hostname;
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'http://localhost:5465';
+    // Use current origin (e.g. http://127.0.0.1:5465) to ensure port matching
+    return window.location.origin;
   }
   // Staging environment: extract username from path
   const pathParts = window.location.pathname.split('/');
