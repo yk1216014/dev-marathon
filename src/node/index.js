@@ -25,7 +25,7 @@ if (!dbUser) {
   } else {
     // Fallback for Staging (localhost)
     dbUser = "user_kento_yokoyama";
-    dbName = "db_kento_yokoyama";
+    dbName = "localhost";
     dbPass = "5Rw5YDaWc5jc";
   }
 }
