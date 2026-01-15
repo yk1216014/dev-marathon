@@ -47,7 +47,7 @@ unzip src.zip
 # ★ここが最重要です。これをやらないと画面が更新されません。
 # "-r" はフォルダごとコピーするオプションです。
 # "cp -r (コピー元) (コピー先)"
-cp -r src/node/web/* /usr/share/nginx/html/kento_yokoyama/
+cp -r src/web/* /usr/share/nginx/html/kento_yokoyama/
 
 # 5. バックエンドのセットアップ
 cd src/node

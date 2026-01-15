@@ -5,7 +5,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./src/node/web:/usr/share/nginx/html
+      - ./src/web:/usr/share/nginx/html
       - ./work:/work
     working_dir: /usr/share/nginx/html
     tty: true # 開発時のみ有効
@@ -17,6 +17,7 @@ services:
       - "5465:5465"
     volumes:
       - ./src/node:/app
+      - ./src/web:/web
       - ./work:/work
     working_dir: /app
     environment:

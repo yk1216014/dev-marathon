@@ -33,7 +33,7 @@ describe('顧客情報入力フォームのテスト', () => {
 
     // 6. 完了アラートの確認
     // 文言修正：「顧客情報が正常に保存されました。」に変更
-    cy.get('@alertStub').should('have.been.calledOnceWith', '顧客情報が正常に保存されました。');
+    cy.get('@alertStub').should('have.been.calledOnceWith', '登録が完了しました！');
 
     // 7. リスト画面への遷移を確認
     cy.url().should('include', 'list.html');
