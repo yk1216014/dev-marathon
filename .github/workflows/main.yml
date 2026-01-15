@@ -1,0 +1,29 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main  # mainブランチにpushされた時だけ動く設定
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Production Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            echo "--- Login to Production Success! ---"
+            whoami
+            # ステージング環境（26KM）で成功したのと同じ手順を実行
+            sed -i 's/\r//' /app/kento_yokoyama/deploy.sh
+            chmod +x /app/kento_yokoyama/deploy.sh
+            bash /app/kento_yokoyama/deploy.sh kento_yokoyama
