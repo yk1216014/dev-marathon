@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - develop  # developブランチにpushされた時に起動
+      - develop
 
 jobs:
   deploy:
@@ -20,7 +20,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/${{ secrets.SERVER_USER }}/dev-marathon
-            git pull origin develop
-            docker-compose down
-            docker-compose up -d --build
+            # 成功例（develop.yml）と同じパスとコマンドに修正
+            sed -i 's/\r//' /app/kento_yokoyama/deploy.sh
+            chmod +x /app/kento_yokoyama/deploy.sh
+            bash /app/kento_yokoyama/deploy.sh kento_yokoyama
