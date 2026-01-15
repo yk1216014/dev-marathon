@@ -1,11 +1,22 @@
 const getApiUrl = () => {
+  const host = window.location.hostname;
   const path = window.location.pathname;
-  // If we are in a subdirectory (customer, case, negotiation), go up one level
-  if (path.includes('/customer/') || path.includes('/case/') || path.includes('/negotiation/')) {
-    return '..';
+
+  // Local environment (Docker/localhost)
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return '';
   }
-  // Otherwise (root), use current directory
-  return '.';
+
+  // Staging environment: Path is like /kento_yokoyama/customer/...
+  // We need to construct the API URL as /api_kento_yokoyama
+  const parts = path.split('/');
+  if (parts.length > 1 && parts[1]) {
+    const username = parts[1];
+    return `/api_${username}`;
+  }
+
+  // Fallback
+  return '';
 };
 
 const config = {
