@@ -39,10 +39,6 @@ jobs:
             chmod +x /app/kento_yokoyama/deploy.sh
             bash /app/kento_yokoyama/deploy.sh kento_yokoyama
 
-  # 2. Cypressテストの実行 (リモートのテストコードを使用)
-  run-e2e-tests:
-    needs: deploy-staging
-    runs-on: ubuntu-latest
   # 2. Cypressテストの実行 (Stagingサーバー上で実行)
   run-e2e-tests:
     needs: deploy-staging
