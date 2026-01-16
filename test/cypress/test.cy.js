@@ -1,7 +1,7 @@
 describe('顧客情報入力フォームのテスト', () => {
   it('顧客情報を入力して送信し、確認画面を経て完了メッセージを確認する', () => {
-    // 1. 入力画面にアクセス
-    cy.visit('http://127.0.0.1:5465/customer/add.html');
+    // 1. 入力画面にアクセス (baseUrlからの相対パス)
+    cy.visit('customer/add.html');
 
     cy.window().then((win) => {
       // alertをスタブ化
@@ -32,8 +32,13 @@ describe('顧客情報入力フォームのテスト', () => {
     cy.get('#btn-submit').click();
 
     // 6. 完了アラートの確認
+<<<<<<< HEAD
     // 文言修正：「顧客情報が正常に保存されました。」に変更
     cy.get('@alertStub').should('have.been.calledOnceWith', '登録が完了しました！');
+=======
+    // ステージングとローカルでの表記揺れを防ぐため、存在確認のみにするか、正しいメッセージに統一
+    cy.get('@alertStub').should('have.been.calledOnceWith', '顧客情報が正常に保存されました。');
+>>>>>>> develop
 
     // 7. リスト画面への遷移を確認
     cy.url().should('include', 'list.html');

@@ -13,14 +13,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to Server via SSH
+      # ソースコードをzipに圧縮
+      - name: Create Zip Archive
+        run: zip -r src.zip src/
+
+      # Stagingサーバーへ転送 (src.zip と deploy.sh)
+      - name: Transfer files to Staging
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "src.zip,deploy.sh"
+          target: "/app/kento_yokoyama/"
+
+      # サーバー上で解凍＆デプロイ実行
+      - name: Execute Deploy Script on Staging
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 成功例（develop.yml）と同じパスとコマンドに修正
-            sed -i 's/\r//' /app/kento_yokoyama/deploy.sh
+            echo "--- Executing Staging Deployment (Develop) ---"
             chmod +x /app/kento_yokoyama/deploy.sh
             bash /app/kento_yokoyama/deploy.sh kento_yokoyama

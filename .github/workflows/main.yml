@@ -1,29 +1,131 @@
-name: Deploy to Production
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
-      - main  # mainブランチにpushされた時だけ動く設定
+      - main
 
 jobs:
-  deploy:
+  # 1. Stagingへのデプロイ (Zip転送)
+  deploy-staging:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to Production Server via SSH
+      # ソースコードをzipに圧縮
+      - name: Create Zip Archive
+        run: zip -r src.zip src/
+
+      # Stagingサーバーへ転送 (src.zip と deploy.sh)
+      - name: Transfer files to Staging
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "src.zip,deploy.sh"
+          target: "/app/kento_yokoyama/"
+
+      # サーバー上で解凍＆デプロイ実行
+      - name: Execute Deploy Script on Staging
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "--- Executing Staging Deployment ---"
+            chmod +x /app/kento_yokoyama/deploy.sh
+            bash /app/kento_yokoyama/deploy.sh kento_yokoyama
+
+  # 2. Cypressテストの実行 (リモートのテストコードを使用)
+  run-e2e-tests:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      # Stagingサーバーからテストファイルをダウンロード
+      - name: Download Test File from Staging
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # リモートからローカルへコピー (sourceがリモートパス、targetがローカルパス)
+          source: "/ci/cypress/e2e/kento_yokoyama.cy.js"
+          target: "test/cypress/e2e_remote/"
+          # scp-actionの仕様で、リモート→ローカルは逆方向指定が必要だが
+          # このactionは pushメインのため、downloadには ssh + scpコマンドを使う方が確実
+
+      # 代替案: SCPアクションよりSSHコマンドで直接取得
+      - name: Fetch Remote Test File
+        env:
+          KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p test/cypress/remote
+          echo "$KEY" > private_key
+          chmod 600 private_key
+          # scp -i private_key user@host:/path local/path
+          scp -o StrictHostKeyChecking=no -i private_key ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/ci/cypress/e2e/kento_yokoyama.cy.js test/cypress/remote/test.cy.js
+          rm private_key
+
+      - name: Install Dependencies
+        run: |
+          cd src/node
+          npm install
+          npm install cypress --save-dev
+
+      - name: Run Cypress Tests
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: .
+          config: baseUrl=http://dev.marathon.rplearn.net/kento_yokoyama
+          # ダウンロードしたテストファイルを使用
+          spec: test/cypress/remote/test.cy.js
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+
+  # 3. Productionへのデプロイ (Zip転送)
+  deploy-production:
+    needs: run-e2e-tests
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Zip Archive
+        run: zip -r src.zip src/
+
+      # Productionサーバーへ転送
+      - name: Transfer files to Production
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+          source: "src.zip,deploy.sh"
+          target: "/app/kento_yokoyama/"
+
+      - name: Execute Deploy Script on Production
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.PROD_SSH_HOST }}
           username: ${{ secrets.PROD_SSH_USER }}
           key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
-          port: 22
           script: |
-            echo "--- Login to Production Success! ---"
-            whoami
-            # ステージング環境（26KM）で成功したのと同じ手順を実行
-            sed -i 's/\r//' /app/kento_yokoyama/deploy.sh
+            echo "--- Executing Production Deployment ---"
             chmod +x /app/kento_yokoyama/deploy.sh
             bash /app/kento_yokoyama/deploy.sh kento_yokoyama
