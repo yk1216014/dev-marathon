@@ -43,46 +43,27 @@ jobs:
   run-e2e-tests:
     needs: deploy-staging
     runs-on: ubuntu-latest
+  # 2. Cypressテストの実行 (Stagingサーバー上で実行)
+  run-e2e-tests:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Execute Cypress on Staging Server
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          node-version: 18
-
-      # Stagingサーバーからテストファイルをダウンロード (SCPコマンドを使用)
-      - name: Fetch Remote Test File
-        env:
-          KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          mkdir -p test/cypress/remote
-          echo "$KEY" > private_key
-          chmod 600 private_key
-          # scp -i private_key user@host:/path local/path
-          scp -o StrictHostKeyChecking=no -i private_key ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/ci/cypress/e2e/kento_yokoyama.cy.js test/cypress/remote/test.cy.js
-          rm private_key
-
-      - name: Install Dependencies
-        run: |
-          cd src/node
-          npm install
-          npm install cypress --save-dev
-
-      - name: Run Cypress Tests
-        uses: cypress-io/github-action@v6
-        with:
-          working-directory: .
-          config: baseUrl=http://dev.marathon.rplearn.net/kento_yokoyama
-          # ダウンロードしたテストファイルを使用
-          spec: test/cypress/remote/test.cy.js
-
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: cypress-screenshots
-          path: cypress/screenshots
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: 300s # テストが長引く場合に備えて少し長めに
+          script: |
+            echo "--- Starting Remote Cypress Test ---"
+            cd /ci
+            
+            # 念のためファイルがあるか確認 (絶対パスで確実に見る)
+            ls -l /ci/cypress/e2e/kento_yokoyama.cy.js
+            
+            # 手順書に従い、/ci に移動した状態で spec を指定
+            npx cypress run --browser chrome --spec cypress/e2e/kento_yokoyama.cy.js
 
   # 3. Productionへのデプロイ (Zip転送)
   deploy-production:
