@@ -52,20 +52,7 @@ jobs:
         with:
           node-version: 18
 
-      # Stagingサーバーからテストファイルをダウンロード
-      - name: Download Test File from Staging
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # リモートからローカルへコピー (sourceがリモートパス、targetがローカルパス)
-          source: "/ci/cypress/e2e/kento_yokoyama.cy.js"
-          target: "test/cypress/e2e_remote/"
-          # scp-actionの仕様で、リモート→ローカルは逆方向指定が必要だが
-          # このactionは pushメインのため、downloadには ssh + scpコマンドを使う方が確実
-
-      # 代替案: SCPアクションよりSSHコマンドで直接取得
+      # Stagingサーバーからテストファイルをダウンロード (SCPコマンドを使用)
       - name: Fetch Remote Test File
         env:
           KEY: ${{ secrets.SSH_PRIVATE_KEY }}
